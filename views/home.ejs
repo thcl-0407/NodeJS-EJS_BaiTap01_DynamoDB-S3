@@ -1,6 +1,207 @@
-<form action="/uploadphoto" method="post" enctype="multipart/form-data">
-    <input type="file" name="avatar" />
-    <br/>
-    <br/>
-    <button type="submit">Upload</button>
-</form>
+<html>
+
+<head>
+    <title>Sinh Viên</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
+    </script>
+
+
+    <style>
+        table>thead>tr>th {
+            text-align: center;
+        }
+
+        table>tbody>tr>td {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid" style="margin-top: 20pt;">
+        <div class="row">
+            <div class="col-sm-4" style="text-align: center; padding: 0 60pt;">
+                <form action="/themsv" method="post" enctype="multipart/form-data" id='frmSinhVien'>
+                    <div class="form-group" style="text-align: start;">
+                        <span style="font-weight: 550;">ID</span>
+                        <br />
+                        <input class="form-control" type="text" name="id" id="txt_iditem" required
+                            pattern="^[1-9][0-9]*$">
+                    </div>
+                    <div class="form-group" style="text-align: start;">
+                        <span style="font-weight: 550;">Mã Sinh Viên</span>
+                        <br />
+                        <input class="form-control" type="text" name="masinhvien" id="txt_masv" required
+                            pattern="^[1-9][0-9]*$">
+                    </div>
+                    <div class="form-group" style="text-align: start;">
+                        <span style="font-weight: 550;">Tên Sinh Viên</span>
+                        <br />
+                        <input class="form-control" type="text" name="tensinhvien" id="txt_tensv" required
+                            pattern="^(\s?[A-Z][a-z]*\s?)+$">
+                    </div>
+                    <div class="form-group" style="text-align: start;">
+                        <span style="font-weight: 550;">Năm Sinh</span>
+                        <br />
+                        <input class="form-control" type="number" name="namsinh" id="txt_namsinh" required
+                            pattern="^(19|20)[0-9][0-9]$">
+                    </div>
+                    <div class="form-group" style="text-align: start;">
+                        <span style="font-weight: 550;">Mã Lớp</span>
+                        <br />
+                        <input class="form-control" type="text" name="malop" id="txt_malop" required
+                            pattern="^DH[A-Z]*[1-9][0-9][A-Z]$">
+                    </div>
+                    <div style="text-align: start;" id="container_upload_avatar">
+                        <span style="font-weight: 550;">Upload Avatar</span>
+                        <br />
+                        <input style="margin-top: 1rem; display: none;" type="text" id="txt_avatar"/>
+                        <input style="margin-top: 1rem;" type="file" name="avatar"/>
+                    </div>
+
+                    <button style="margin-top: 2rem;" type="submit" class="btn btn-primary" id="btnUpload">Upload</button>
+                    <button style="margin-top: 2rem; display: none;" type="submit" class="btn btn-primary" id="btnSave">Save</button>
+                </form>
+            </div>
+            <div class="col-sm-8">
+                <table class="table table-hover table-bordered" id="tblSinVien">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Mã Sinh Viên</th>
+                            <th>Mã Lớp</th>
+                            <th>Tên Sinh Viên</th>
+                            <th>Năm Sinh</th>
+                            <th style="display: none;">Avatar</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% sinhviens.forEach(e => { %>
+                        <tr>
+                            <td class="iditem"><%- e.id %></td>
+                            <td class="masinhvien"><%- e.ma_sinhvien %></td>
+                            <td class="malop"><%- e.ma_lop %></td>
+                            <td class="ten"><%- e.ten_sinhvien %></td>
+                            <td class="namsinh"><%- e.namsinh %></td>
+                            <td class="avatar" style="display: none;"><%- e.avatar %></td>
+                            <td class="button_control_table" style="width: 15rem;">
+                                    <form method="GET" action="/xoasv/id=<%- e.id %>&masv=<%- e.ma_sinhvien %>">
+                                        <button id="btnInfor" class="btn btn-primary" type="button" style="margin: 0;">Infor</button>
+                                        <button id="btnSua" class="btn btn-info" type="button" style="margin: 0;">Sửa</button>
+                                        <button class="btn btn-danger" type="submit" id="btnXoa">Xoá</button>
+                                    </form>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sinh Vien -->
+    <div id="modalSinhVien" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Profile Sinh Viên</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <img src="" id="imgAvatar" style="width: 100%; height: auto;" class="img-thumbnail">
+                        </div>
+                        <div class="col-sm-6">
+                           <h5 id="disMaSV" style="margin-bottom: 5pt;"></h5>
+                           <h5 id="disTen" style="margin-bottom: 5pt;"></h5>
+                           <h5 id="disLop" style="margin-bottom: 5pt;"></h5>
+                           <h5 id="disNamSinh" style="margin-bottom: 5pt;"></h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $('#tblSinVien tbody').on('click', '#btnInfor', (e) => {
+            $('#modalSinhVien').modal()
+            var maSV = $(e.target).closest('tr').show().find('.masinhvien').text()
+            var ten = $(e.target).closest('tr').show().find('.ten').text()
+            var lop = $(e.target).closest('tr').show().find('.malop').text()
+            var namsinh = $(e.target).closest('tr').show().find('.namsinh').text()
+            var avatar = $(e.target).closest('tr').show().find('.avatar').text()
+
+            $('#disMaSV').text(maSV)
+            $('#disTen').text(ten)
+            $('#disLop').text(lop)
+            $('#disNamSinh').text(namsinh)
+
+            $('#imgAvatar').attr('src', 'https://thcongloc.s3.amazonaws.com/' + avatar)
+        })
+
+        $('#tblSinVien tbody').on('click', '#btnSua', (e) => {
+            var idSV = $(e.target).closest('tr').show().find('.iditem').text()
+            var maSV = $(e.target).closest('tr').show().find('.masinhvien').text()
+            var ten = $(e.target).closest('tr').show().find('.ten').text()
+            var lop = $(e.target).closest('tr').show().find('.malop').text()
+            var namsinh = $(e.target).closest('tr').show().find('.namsinh').text()
+            var avatarcu = $(e.target).closest('tr').show().find('.avatar').text()
+
+            $('#txt_iditem').val(idSV)
+            $('#txt_masv').val(maSV)
+            $('#txt_tensv').val(ten)
+            $('#txt_namsinh').val(namsinh)
+            $('#txt_malop').val(lop)
+            $('#txt_avatar').val(avatarcu)
+
+            $('#btnUpload').css('display', 'none');
+            $('#btnSave').css('display', 'inline');
+            $('#container_upload_avatar').css('display', 'none')
+            $('#txt_iditem').prop('readonly', true)
+            $('#txt_masv').prop('readonly', true)
+        })
+
+        $('#btnSave').click(()=>{
+            $('#frmSinhVien').submit((e)=>{
+                e.preventDefault()
+            })
+
+            var data = {
+                id:  $('#txt_iditem').val(),
+                ma_sinhvien: $('#txt_masv').val(),
+                ten_sinhvien: $('#txt_tensv').val(),
+                namsinh: $('#txt_namsinh').val(),
+                ma_lop: $('#txt_malop').val(),
+                avatarcu: $('#txt_avatar').val(),
+            }
+
+            $.ajax({
+                url: "/capnhatsv",
+                type: "PATCH",
+                dataType: "json",
+                contentType: 'application/json;charset=utf-8',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    if(res){
+                        window.location = "/"
+                    }
+                },
+            });
+        })
+    </script>
+</body>
+
+</html>

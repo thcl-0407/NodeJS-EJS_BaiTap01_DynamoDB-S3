@@ -2,6 +2,8 @@ const aws_sdk = require('../../config/dynamo_conf.js')
 const doc_client = new aws_sdk.aws_sdk.DynamoDB.DocumentClient();
 const table_name = 'SinhVien'
 
+const s3 = require('../s3/s3.js')
+
 function CreateItem(data, callback) {
     const params = {
         TableName: table_name,
@@ -19,7 +21,18 @@ function CreateItem(data, callback) {
         if (err) {
             callback(false)
         } else {
-            callback(true)
+            var fileupload = {
+                filename: data.avatar,
+                file: data.file
+            }
+   
+            s3.UploadData(fileupload, (result)=>{
+                if(result){
+                    callback(true)
+                }else{
+                    callback(false)
+                }
+            })
         }
     })
 }
@@ -32,34 +45,12 @@ function UpdateItem(data, callback) {
             "id": String(data.id), //<----Bắt Buộc Có Hask Key
             "ma_sinhvien": String(data.ma_sinhvien)//<----Bắt Buộc Có Sort Key
         },
-        UpdateExpression: "SET ten_sinhvien = :tensv, namsinh = :namsinh, ma_lop = :malop",
+        UpdateExpression: "SET ten_sinhvien = :tensv, namsinh = :namsinh, ma_lop = :malop, avatar = :avatar",
         ExpressionAttributeValues:{
             ':tensv': String(data.ten_sinhvien),//<----Cập Nhật Họ Tên Mới
             ':namsinh':String(data.namsinh),//<----Cập Nhật Năm Sinh Mới
             ':malop':String(data.ma_lop),//<----Cập Nhật Mã Lớp Mới
-        },
-        ReturnValues:"UPDATED_NEW"
-    }
-
-    doc_client.update(params, (err) => {
-        if (err) {
-            callback(false)
-        } else {
-            callback(true)
-        }
-    })
-}
-
-function UpdateAvatar(data, callback) {
-    const params = {
-        TableName: table_name,
-        Key: {
-            "id": String(data.id), //<----Bắt Buộc Có Hask Key
-            "ma_sinhvien": String(data.ma_sinhvien)//<----Bắt Buộc Có Sort Key
-        },
-        UpdateExpression: "SET  avatar = :avatar",
-        ExpressionAttributeValues:{
-            ':avatar':String(data.avatar),//<----Cập Nhật Avatar Mới
+            ':avatar':String(data.avatarcu),//<----Cập Nhật Avatar Mới
         },
         ReturnValues:"UPDATED_NEW"
     }
@@ -105,9 +96,28 @@ function DeleteItem(data, callback){
     })
 }
 
+function GetItem(data){
+    const params = {
+        TableName: table_name,
+        Key:{
+            "id": String(data.id), //<----Bắt Buộc Có Hask Key
+            "ma_sinhvien": String(data.ma_sinhvien)//<----Bắt Buộc Có Sort Key
+        }
+    }
+
+    doc_client.scan(params, (err, data)=>{
+        if(err){
+            callback(false)
+        }else{
+            callback(data.Items)
+        }
+    })
+}
+
 module.exports = {
     Get_All_Items,
     CreateItem,
     UpdateItem,
-    DeleteItem
+    DeleteItem,
+    GetItem
 }

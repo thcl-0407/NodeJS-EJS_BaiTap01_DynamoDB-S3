@@ -1,8 +1,9 @@
 const PORT = 2000
 const express = require('express')
 const multer = require('multer')
+const s3 = require('./controller/s3/s3.js')
 const body_Parer = require('body-parser') 
-const creat_item = require('./controller/dynamo/item_control.js')
+const item_control = require('./controller/dynamo/item_control.js')
 const upload = multer()
 const app = express()
 
@@ -14,21 +15,37 @@ app.set('view engine', 'ejs')
 
 //*************************************************************** */
 
-//Render Trang Chủ
-app.get('/', (req, res) => {
-    res.render('home')
-})
-
 //Get Tất Cả Sinh Viên
-app.get('/allsv', (req, res) => {
+app.get('/', (req, res) => {
     let data = req.body
 
     if (data != null) {
-        creat_item.Get_All_Items((result) => {
-            if (!result) {
+        item_control.Get_All_Items((data) => {
+            if (!data) {
                 res.render('error')
             } else {
-                res.send(result)
+                /*
+                 var filename = {
+                    filename: '160342648459902.jpg',
+                }
+
+                s3.GetObject(filename, (result)=>{
+                    if(result){
+                        let buff = new Buffer.from(result, 'base64');
+                        let img = buff.toString('base64');
+                        
+                        res.render('home', {
+                            sinhviens: data,
+                            file: "data:image/png;base64," + img
+                        })
+                    }else{
+                        res.redirect('/')
+                    }
+                })*/
+
+                res.render('home', {
+                    sinhviens: data
+                })
             }
         })
     } else {
@@ -37,13 +54,21 @@ app.get('/allsv', (req, res) => {
 })
 
 //Thêm Sinh Viên
-app.post('/themsv', (req, res) => {
-    let data = req.body
+app.post('/themsv', upload.single('avatar'), (req, res) => {
+    let data = {
+        id: req.body.id,
+        ma_sinhvien: req.body.masinhvien,
+        ten_sinhvien: req.body.tensinhvien,
+        namsinh: req.body.namsinh,
+        ma_lop: req.body.malop,
+        avatar: Date.now() + req.file.originalname,
+        file: req.file.buffer
+    }
 
     if (data != null) {
-        creat_item.CreateItem(data, (status) => {
+        item_control.CreateItem(data, (status) => {
             if (status) {
-                res.render('home')
+                res.redirect('/')
             } else {
                 res.render('error')
             }
@@ -54,13 +79,13 @@ app.post('/themsv', (req, res) => {
 })
 
 //Cập Nhật Sinh Viên
-app.patch('/capnhatsv', (req, res) => {
+app.patch('/capnhatsv',  upload.single('avatar'), (req, res) => {
     let data = req.body
-
+    
     if (data != null) {
-        creat_item.UpdateItem(data, (status) => {
+        item_control.UpdateItem(data, (status) => {
             if (status) {
-                res.render('home')
+                res.send(true)
             } else {
                 res.render('error')
             }
@@ -71,13 +96,16 @@ app.patch('/capnhatsv', (req, res) => {
 })
 
 //Xoá Sinh Viên
-app.post('/xoasv', (req, res) => {
-    let data = req.body
+app.get('/xoasv/id=:id&masv=:masv', (req, res) => {
+    let data = {
+        id: req.params.id,
+        ma_sinhvien: req.params.masv
+    }
 
     if (data != null) {
-        creat_item.DeleteItem(data, (status) => {
+        item_control.DeleteItem(data, (status) => {
             if (status) {
-                res.render('home')
+                res.redirect('/')
             } else {
                 res.render('error')
             }
@@ -87,9 +115,27 @@ app.post('/xoasv', (req, res) => {
     }
 })
 
-//Upload Data
-app.post('/uploadphoto', upload.single('avatar'), (req, res) => {
-    //res.send(req.file.originalname)//<---Lấy Tên File
+//Get Item
+app.get('/id=:id&masv=:masv', (req, res)=>{
+    let data = {
+        id: req.params.id,
+        ma_sinhvien: req.params.masv
+    }
+
+    if(data != null){
+        item_control.GetItem(data, (result)=>{
+            if(!result){
+                res.send(false)
+            }else{
+                res.send(result)
+            }
+        })
+    }
+})
+
+//Cập Nhật Avatar
+app.post('/updateavatar',(req, res)=>{
+    
 })
 
 app.listen(PORT, ()=>{
